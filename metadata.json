@@ -1,0 +1,11 @@
+{
+  "name": "Tanzil-ur-Rehman AI Portal",
+  "description": "A high-end AI Portal reflecting the persona of Tanzil-ur-Rehman - App Developer, AI Expert, Graphic & Web Designer, featuring multi-key API management and Sharia-compliant AI services.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
