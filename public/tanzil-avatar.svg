@@ -1,76 +1,144 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0f172a"/>
       <stop offset="50%" stop-color="#1e293b"/>
-      <stop offset="100%" stop-color="#0f5132"/>
+      <stop offset="100%" stop-color="#064e3b"/>
     </linearGradient>
-    <linearGradient id="capGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#1e40af"/>
-      <stop offset="50%" stop-color="#2563eb"/>
-      <stop offset="100%" stop-color="#1d4ed8"/>
+
+    <!-- Kufi Cap Blue Gradient -->
+    <linearGradient id="capGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="40%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
     </linearGradient>
-    <linearGradient id="skin" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#e2a77a"/>
-      <stop offset="100%" stop-color="#c88b5d"/>
+
+    <!-- Skin Tones -->
+    <linearGradient id="skinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e2aa82"/>
+      <stop offset="60%" stop-color="#d49366"/>
+      <stop offset="100%" stop-color="#b8784d"/>
     </linearGradient>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.3"/>
+
+    <linearGradient id="skinShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ab6b40" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#804a25" stop-opacity="0.7"/>
+    </linearGradient>
+
+    <!-- Beard Gradients -->
+    <linearGradient id="beardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#18181b"/>
+      <stop offset="70%" stop-color="#09090b"/>
+      <stop offset="90%" stop-color="#27272a"/>
+      <stop offset="100%" stop-color="#52525b"/>
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+
+    <filter id="capShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.5"/>
     </filter>
   </defs>
+
+  <!-- Background Base -->
+  <rect width="500" height="500" rx="250" fill="url(#bgGrad)"/>
   
-  <!-- Background circle -->
-  <rect width="400" height="400" rx="200" fill="url(#bg)"/>
-  
-  <!-- Outer glowing ring -->
-  <circle cx="200" cy="200" r="192" fill="none" stroke="#10b981" stroke-width="4" stroke-opacity="0.4"/>
-  
-  <g transform="translate(0, 15)">
-    <!-- Shoulders & White Kurta -->
-    <path d="M 80 340 Q 200 290 320 340 L 330 400 L 70 400 Z" fill="#f8fafc" filter="url(#shadow)"/>
-    <path d="M 175 305 L 200 370 L 225 305 Z" fill="#e2e8f0"/>
+  <!-- Outer Glow Ring -->
+  <circle cx="250" cy="250" r="242" fill="none" stroke="#10b981" stroke-width="5" stroke-opacity="0.5"/>
+  <circle cx="250" cy="250" r="236" fill="none" stroke="#059669" stroke-width="2" stroke-opacity="0.3"/>
+
+  <!-- Main Figure Group -->
+  <g transform="translate(0, 20)">
     
-    <!-- Scarf / Keffiyeh over Left Shoulder -->
-    <path d="M 230 310 C 270 320, 310 350, 325 400 L 265 400 C 250 365, 230 335, 215 320 Z" fill="#cbd5e1" opacity="0.9"/>
-    <!-- Scarf pattern lines -->
-    <path d="M 240 320 L 300 390 M 255 330 L 310 390 M 270 340 L 320 390" stroke="#475569" stroke-width="2" stroke-dasharray="4,4"/>
+    <!-- White Kurta / Thobe Body -->
+    <path d="M 100 420 Q 250 360 400 420 L 410 490 L 90 490 Z" fill="#ffffff" filter="url(#softShadow)"/>
+    
+    <!-- Kurta Collar & V-Neck -->
+    <path d="M 210 370 L 250 440 L 290 370 Z" fill="#f1f5f9"/>
+    <path d="M 220 370 L 250 430 L 280 370 Z" fill="#e2e8f0"/>
+    <line x1="250" y1="430" x2="250" y2="480" stroke="#cbd5e1" stroke-width="2.5"/>
+
+    <!-- Left Shoulder Keffiyeh / Scarf (Black & White Pattern) -->
+    <path d="M 285 380 C 340 395, 390 425, 410 480 L 330 480 C 310 440, 285 405, 265 390 Z" fill="#f8fafc" filter="url(#softShadow)"/>
+    <!-- Scarf Checks -->
+    <path d="M 295 390 L 380 475 M 315 400 L 395 475 M 335 410 L 405 475" stroke="#334155" stroke-width="3" stroke-dasharray="6,5"/>
+    <path d="M 350 400 L 290 460 M 370 410 L 310 470 M 390 420 L 330 480" stroke="#334155" stroke-width="3" stroke-dasharray="6,5"/>
 
     <!-- Neck -->
-    <rect x="172" y="230" width="56" height="80" rx="10" fill="#c88b5d"/>
-    <path d="M 172 270 Q 200 290 228 270 Z" fill="#b17549" opacity="0.5"/>
+    <rect x="215" y="290" width="70" height="95" rx="12" fill="url(#skinGrad)"/>
+    <path d="M 215 340 Q 250 370 285 340 L 285 385 Q 250 400 215 385 Z" fill="url(#skinShadow)"/>
 
-    <!-- Head & Face -->
-    <ellipse cx="200" cy="180" rx="68" ry="80" fill="url(#skin)" filter="url(#shadow)"/>
+    <!-- Ears -->
+    <ellipse cx="162" cy="235" rx="14" ry="22" fill="url(#skinGrad)"/>
+    <ellipse cx="338" cy="235" rx="14" ry="22" fill="url(#skinGrad)"/>
+    <path d="M 164 225 Q 158 235 166 245" fill="none" stroke="#ab6b40" stroke-width="2"/>
+    <path d="M 336 225 Q 342 235 334 245" fill="none" stroke="#ab6b40" stroke-width="2"/>
 
-    <!-- Eyes -->
-    <ellipse cx="172" cy="170" rx="8" ry="5" fill="#1e293b"/>
-    <ellipse cx="228" cy="170" rx="8" ry="5" fill="#1e293b"/>
-    <circle cx="174" cy="169" r="2" fill="#ffffff"/>
-    <circle cx="230" cy="169" r="2" fill="#ffffff"/>
-    
-    <!-- Eyebrows -->
-    <path d="M 158 158 Q 172 152 186 160" fill="none" stroke="#271b12" stroke-width="4.5" stroke-linecap="round"/>
-    <path d="M 214 160 Q 228 152 242 158" fill="none" stroke="#271b12" stroke-width="4.5" stroke-linecap="round"/>
+    <!-- Head & Face Structure -->
+    <ellipse cx="250" cy="220" rx="84" ry="98" fill="url(#skinGrad)" filter="url(#softShadow)"/>
+
+    <!-- Forehead & Nose Shadowing -->
+    <path d="M 200 160 Q 250 170 300 160 Q 250 185 200 160 Z" fill="#ab6b40" opacity="0.25"/>
+
+    <!-- Eyes (Deep Brown Warm Realistic Eyes) -->
+    <g>
+      <!-- Left Eye -->
+      <path d="M 200 212 Q 215 204 230 212 Q 215 220 200 212 Z" fill="#ffffff"/>
+      <ellipse cx="215" cy="212" rx="7.5" ry="7.5" fill="#271b12"/>
+      <circle cx="215" cy="212" r="4" fill="#09090b"/>
+      <circle cx="217" cy="210" r="2" fill="#ffffff"/>
+
+      <!-- Right Eye -->
+      <path d="M 270 212 Q 285 204 300 212 Q 285 220 270 212 Z" fill="#ffffff"/>
+      <ellipse cx="285" cy="212" rx="7.5" ry="7.5" fill="#271b12"/>
+      <circle cx="285" cy="212" r="4" fill="#09090b"/>
+      <circle cx="287" cy="210" r="2" fill="#ffffff"/>
+    </g>
+
+    <!-- Eyebrows (Strong Dark Brows) -->
+    <path d="M 192 198 Q 215 188 235 200" fill="none" stroke="#18181b" stroke-width="5.5" stroke-linecap="round"/>
+    <path d="M 265 200 Q 285 188 308 198" fill="none" stroke="#18181b" stroke-width="5.5" stroke-linecap="round"/>
 
     <!-- Nose -->
-    <path d="M 200 168 L 195 195 Q 200 200 205 195 Z" fill="#b17549" opacity="0.6"/>
+    <path d="M 250 202 L 244 240 Q 250 248 256 240 Z" fill="#ab6b40" opacity="0.45"/>
+    <path d="M 242 242 C 246 248, 254 248, 258 242" fill="none" stroke="#804a25" stroke-width="2.5" stroke-linecap="round"/>
 
-    <!-- Full Beard (Dark/Black) -->
-    <path d="M 134 180 C 130 250, 160 300, 200 305 C 240 300, 270 250, 266 180 C 260 215, 245 250, 200 255 C 155 250, 140 215, 134 180 Z" fill="#18181b"/>
-    <!-- Moustache -->
-    <path d="M 175 208 Q 200 216 225 208 Q 200 212 175 208 Z" fill="#18181b"/>
+    <!-- Full Black Beard & Mustache (Sunnah Beard with Natural Grey Accents at Chin) -->
+    <!-- Beard Base outline -->
+    <path d="M 168 225 C 160 320, 195 385, 250 392 C 305 385, 340 320, 332 225 C 322 270, 300 325, 250 332 C 200 325, 178 270, 168 225 Z" fill="url(#beardGrad)"/>
+    
+    <!-- Mustache -->
+    <path d="M 218 256 Q 250 268 282 256 Q 250 261 218 256 Z" fill="#09090b"/>
+    <path d="M 222 258 Q 250 270 278 258" fill="none" stroke="#18181b" stroke-width="3"/>
 
-    <!-- Blue Knitted Prayer Cap (Kufi) -->
-    <path d="M 128 160 C 128 85, 272 85, 272 160 C 255 142, 230 135, 200 135 C 170 135, 145 142, 128 160 Z" fill="url(#capGrad)"/>
-    <!-- Cap Texture/Pattern -->
-    <path d="M 135 140 Q 200 120 265 140" fill="none" stroke="#60a5fa" stroke-width="3" stroke-dasharray="6,4"/>
-    <path d="M 142 122 Q 200 102 258 122" fill="none" stroke="#93c5fd" stroke-width="3" stroke-dasharray="5,3"/>
-    <path d="M 155 105 Q 200 88 245 105" fill="none" stroke="#bfdbfe" stroke-width="2.5" stroke-dasharray="4,3"/>
+    <!-- Beard Texture Hairs -->
+    <path d="M 180 260 Q 200 340 250 380 Q 300 340 320 260" fill="none" stroke="#27272a" stroke-width="2.5" stroke-dasharray="8,4"/>
+    <!-- Grey-flecked chin strands -->
+    <path d="M 235 340 L 240 380 M 250 345 L 250 388 M 265 340 L 260 380 M 245 350 L 248 385" stroke="#a1a1aa" stroke-width="1.8" stroke-linecap="round" opacity="0.85"/>
+
+    <!-- Knitted Blue Prayer Cap (Kufi / Topi) -->
+    <g filter="url(#capShadow)">
+      <!-- Cap Base Shape -->
+      <path d="M 160 195 C 158 95, 342 95, 340 195 C 315 170, 285 162, 250 162 C 215 162, 185 170, 160 195 Z" fill="url(#capGrad)"/>
+      
+      <!-- Knitted Mesh Ribbed Texture Lines -->
+      <path d="M 168 172 Q 250 148 332 172" fill="none" stroke="#60a5fa" stroke-width="3.5" stroke-dasharray="6,4"/>
+      <path d="M 176 150 Q 250 128 324 150" fill="none" stroke="#93c5fd" stroke-width="3.5" stroke-dasharray="5,4"/>
+      <path d="M 188 130 Q 250 110 312 130" fill="none" stroke="#bfdbfe" stroke-width="3" stroke-dasharray="4,3"/>
+      <path d="M 205 112 Q 250 96 295 112" fill="none" stroke="#dbeafe" stroke-width="2.5" stroke-dasharray="4,3"/>
+
+      <!-- Vertical Rib Stitching -->
+      <path d="M 190 180 L 195 140 M 220 170 L 222 125 M 250 165 L 250 110 M 280 170 L 278 125 M 310 180 L 305 140" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="3,3" opacity="0.8"/>
+    </g>
   </g>
 
-  <!-- AI & Code Badges -->
-  <g transform="translate(290, 40)">
-    <circle cx="24" cy="24" r="22" fill="#10b981"/>
-    <text x="24" y="29" font-family="sans-serif" font-weight="bold" font-size="12" fill="#ffffff" text-anchor="middle">AI</text>
+  <!-- Verified Badge -->
+  <g transform="translate(360, 360)" filter="url(#softShadow)">
+    <circle cx="28" cy="28" r="26" fill="#10b981" stroke="#ffffff" stroke-width="3"/>
+    <path d="M 18 28 L 25 35 L 38 20" fill="none" stroke="#ffffff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>

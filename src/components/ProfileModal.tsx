@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
   avatarUrl: string;
+  onUpdateAvatar?: (url: string) => void;
   isDarkMode: boolean;
 }
 
@@ -11,9 +12,25 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
   isOpen,
   onClose,
   avatarUrl,
+  onUpdateAvatar,
   isDarkMode
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   if (!isOpen) return null;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        if (evt.target?.result && onUpdateAvatar) {
+          onUpdateAvatar(evt.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
@@ -30,7 +47,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-base sm:text-lg tracking-tight">Official Profile (سرکاری پروفائل - تنزیل الرحمن)</h3>
-              <p className="text-xs opacity-60">Verified Credentials & Bio • Verified Read-Only</p>
+              <p className="text-xs opacity-60">Verified Credentials & Bio • Tanzil-ur-Rehman Studio</p>
             </div>
           </div>
           <button 
@@ -43,19 +60,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Read-Only Notice */}
-          <div className={`p-3 rounded-2xl text-xs flex items-center gap-2 border ${
-            isDarkMode ? 'bg-slate-800/80 border-slate-700 text-slate-300' : 'bg-gray-100 border-gray-200 text-slate-700'
-          }`}>
-            <i className="fas fa-lock text-emerald-500 text-sm"></i>
-            <span className="font-semibold">پروفائل کی معلومات اور تصویر محفوظ (Read-Only) ہیں۔ پبلک کے لیے ترمیم الاؤ نہیں ہے۔</span>
-          </div>
-
           {/* Avatar Header Card */}
           <div className={`p-6 rounded-3xl border flex flex-col sm:flex-row items-center gap-6 relative overflow-hidden ${
             isDarkMode ? 'bg-slate-800/60 border-slate-700/80' : 'bg-slate-50 border-gray-200'
           }`}>
-            <div className="relative">
+            <div className="relative group">
               <img 
                 src={avatarUrl} 
                 alt="Tanzil-ur-Rehman" 
@@ -66,7 +75,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               </div>
             </div>
 
-            <div className="space-y-2 text-center sm:text-left flex-1">
+            <div className="space-y-3 text-center sm:text-left flex-1">
               <div>
                 <div className="flex items-center justify-center sm:justify-start gap-2">
                   <h3 className="text-xl font-bold tracking-tight">Tanzil-ur-Rehman</h3>
@@ -75,6 +84,25 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-emerald-500 font-semibold tracking-wide mt-0.5">Farooka, Sargodha (فروکہ، سرگودھا)</p>
+              </div>
+
+              {/* Photo Upload Option */}
+              <div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  accept="image/*" 
+                  className="hidden" 
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition-all flex items-center gap-1.5 mx-auto sm:mx-0"
+                >
+                  <i className="fas fa-camera"></i>
+                  <span>تصویر تبدیل کریں (Upload Exact Photo)</span>
+                </button>
               </div>
 
               {/* Skills Badges */}

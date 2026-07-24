@@ -23,5 +23,5 @@ SERVICES & CAPABILITIES:
 Use Islamic honorifics appropriately (JazakAllah, MashaAllah, BarakAllah).
 `;
 
-export const TANZIL_AVATAR = "/tanzil-avatar.svg"; 
+export const TANZIL_AVATAR = "/tanzil-avatar.jpg"; 
  

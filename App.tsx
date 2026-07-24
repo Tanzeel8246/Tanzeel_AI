@@ -29,7 +29,7 @@ const App: React.FC = () => {
     lastReset: Date.now()
   });
 
-  // Avatar Image state
+  // Avatar Image state (Tanzil-ur-Rehman Verified Official Portrait)
   const [avatarUrl, setAvatarUrl] = useState<string>(() => {
     return localStorage.getItem('tanzil_avatar') || TANZIL_AVATAR;
   });
@@ -482,6 +482,7 @@ const App: React.FC = () => {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         avatarUrl={avatarUrl}
+        onUpdateAvatar={(url) => setAvatarUrl(url)}
         isDarkMode={isDarkMode}
       />
 
