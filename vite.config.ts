@@ -12,6 +12,12 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [react()],
       define: {
+        'process.env': JSON.stringify({
+          GEMINI_API_KEY: env.GEMINI_API_KEY || '',
+          API_KEY: env.GEMINI_API_KEY || '',
+          GEMINI_API_KEY_2: env.GEMINI_API_KEY_2 || '',
+          GEMINI_API_KEY_3: env.GEMINI_API_KEY_3 || ''
+        }),
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
         'process.env.GEMINI_API_KEY_2': JSON.stringify(env.GEMINI_API_KEY_2 || ''),
