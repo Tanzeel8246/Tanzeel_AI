@@ -67,6 +67,11 @@ async function startServer() {
   app.use(express.json({ limit: "20mb" }));
   app.use(express.urlencoded({ extended: true, limit: "20mb" }));
 
+  // Serve public directory statically before Vite middleware so uploads and static assets work instantly
+  if (fs.existsSync(PUBLIC_DIR)) {
+    app.use(express.static(PUBLIC_DIR));
+  }
+
   // API Routes
   app.get("/api/settings", (req, res) => {
     const settings = getSettings();
@@ -124,34 +129,11 @@ async function startServer() {
         return res.status(400).json({ success: false, message: "Invalid image" });
       }
 
-      // Base64 header removal
-      const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
-      const buffer = Buffer.from(base64Data, "base64");
-
-      if (!fs.existsSync(PUBLIC_DIR)) {
-        fs.mkdirSync(PUBLIC_DIR, { recursive: true });
-      }
-
-      const filename = `custom-avatar-${Date.now()}.png`;
-      const filePath = path.join(PUBLIC_DIR, filename);
-
-      fs.writeFileSync(filePath, buffer);
-
-      const avatarUrl = `/${filename}`;
-      current.avatarUrl = avatarUrl;
+      // Store base64 data URL directly so it works instantly on all clients/instances
+      current.avatarUrl = imageBase64;
       saveSettings(current);
 
-      // Also copy to dist/ if dist exists (for production)
-      const distPublic = path.join(process.cwd(), "dist");
-      if (fs.existsSync(distPublic)) {
-        try {
-          fs.writeFileSync(path.join(distPublic, filename), buffer);
-        } catch (e) {
-          console.error("Could not write to dist folder:", e);
-        }
-      }
-
-      return res.json({ success: true, avatarUrl });
+      return res.json({ success: true, avatarUrl: imageBase64 });
     } catch (err: any) {
       console.error("Error saving avatar:", err);
       return res.status(500).json({ success: false, message: err?.message || "Failed to save avatar" });

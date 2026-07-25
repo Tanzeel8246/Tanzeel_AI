@@ -47,9 +47,9 @@ const App: React.FC = () => {
     lastReset: Date.now()
   });
 
-  // Avatar Image state
+  // Avatar Image state (defaults to default avatar, populated from server settings)
   const [avatarUrl, setAvatarUrl] = useState<string>(() => {
-    return adminSettings.avatarUrl || localStorage.getItem('tanzil_avatar') || TANZIL_AVATAR;
+    return adminSettings.avatarUrl || TANZIL_AVATAR;
   });
 
   // API Keys state
@@ -97,8 +97,8 @@ const App: React.FC = () => {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Fetch Global Server Settings on Mount so all users get the Admin's updated profile picture & settings
-  useEffect(() => {
+  // Fetch Global Server Settings on Mount & Focus so all users get the Admin's updated profile picture & settings
+  const loadGlobalSettings = () => {
     fetch('/api/settings')
       .then(res => res.json())
       .then(data => {
@@ -129,11 +129,16 @@ const App: React.FC = () => {
         }
       })
       .catch(err => console.error("Error fetching global server settings:", err));
+  };
+
+  useEffect(() => {
+    loadGlobalSettings();
+    window.addEventListener('focus', loadGlobalSettings);
+    return () => window.removeEventListener('focus', loadGlobalSettings);
   }, []);
 
   useEffect(() => {
     localStorage.setItem('tanzil_admin_settings', JSON.stringify(adminSettings));
-    if (adminSettings.avatarUrl) setAvatarUrl(adminSettings.avatarUrl);
   }, [adminSettings]);
 
   // Save Stats & Themes
@@ -156,10 +161,6 @@ const App: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('tanzil_stats', JSON.stringify(stats));
   }, [stats]);
-
-  useEffect(() => {
-    localStorage.setItem('tanzil_avatar', avatarUrl);
-  }, [avatarUrl]);
 
   useEffect(() => {
     const customOnly = apiKeys.filter(k => !k.isEnvKey && !k.isBuiltIn);
