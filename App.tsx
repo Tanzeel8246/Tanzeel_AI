@@ -97,6 +97,40 @@ const App: React.FC = () => {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Fetch Global Server Settings on Mount so all users get the Admin's updated profile picture & settings
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          if (data.avatarUrl) {
+            setAvatarUrl(data.avatarUrl);
+          }
+          setAdminSettings(prev => ({
+            ...prev,
+            avatarUrl: data.avatarUrl || prev.avatarUrl,
+            systemPrompt: data.systemPrompt || prev.systemPrompt,
+            graphicDailyLimit: data.graphicDailyLimit ?? prev.graphicDailyLimit,
+            webDailyLimit: data.webDailyLimit ?? prev.webDailyLimit,
+            allowPublicRequests: data.allowPublicRequests ?? prev.allowPublicRequests,
+          }));
+          if (data.apiKeys && Array.isArray(data.apiKeys) && data.apiKeys.length > 0) {
+            setApiKeys(prevKeys => {
+              const serverKeys = data.apiKeys;
+              const merged = [...serverKeys];
+              prevKeys.forEach(pk => {
+                if (pk.isEnvKey && !merged.some(m => m.key === pk.key)) {
+                  merged.push(pk);
+                }
+              });
+              return merged;
+            });
+          }
+        }
+      })
+      .catch(err => console.error("Error fetching global server settings:", err));
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('tanzil_admin_settings', JSON.stringify(adminSettings));
     if (adminSettings.avatarUrl) setAvatarUrl(adminSettings.avatarUrl);
@@ -140,8 +174,27 @@ const App: React.FC = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
-  const handleUpdateAdminSettings = (newSettings: Partial<AdminSettings>) => {
-    setAdminSettings(prev => ({ ...prev, ...newSettings }));
+  const handleUpdateAdminSettings = async (newSettings: Partial<AdminSettings>) => {
+    const updated = { ...adminSettings, ...newSettings };
+    setAdminSettings(updated);
+    if (updated.avatarUrl) setAvatarUrl(updated.avatarUrl);
+
+    // Sync to server so all users see changes globally
+    try {
+      await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pin: adminSettings.adminPin || '7860',
+          newSettings: {
+            ...updated,
+            apiKeys
+          }
+        })
+      });
+    } catch (e) {
+      console.error("Failed syncing settings to server", e);
+    }
   };
 
   // Download handlers

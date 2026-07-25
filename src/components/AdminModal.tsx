@@ -91,10 +91,30 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (evt) => {
-        if (evt.target?.result) {
-          onUpdateAdminSettings({ avatarUrl: evt.target.result as string });
-          setSaveNotice("پروفائل تصویر کامیابی سے اپڈیٹ ہو گئی!");
+      reader.onload = async (evt) => {
+        const base64 = evt.target?.result as string;
+        if (base64) {
+          try {
+            const res = await fetch('/api/admin/avatar', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                pin: adminSettings.adminPin || '7860',
+                imageBase64: base64
+              })
+            });
+            const data = await res.json();
+            if (data.success && data.avatarUrl) {
+              onUpdateAdminSettings({ avatarUrl: data.avatarUrl });
+              setSaveNotice("پروفائل تصویر تمام صارفین کے لیے کامیابی سے اپڈیٹ ہو گئی!");
+            } else {
+              onUpdateAdminSettings({ avatarUrl: base64 });
+              setSaveNotice("پروفائل تصویر اپڈیٹ ہو گئی!");
+            }
+          } catch (err) {
+            onUpdateAdminSettings({ avatarUrl: base64 });
+            setSaveNotice("پروفائل تصویر اپڈیٹ ہو گئی!");
+          }
           setTimeout(() => setSaveNotice(null), 3000);
         }
       };
