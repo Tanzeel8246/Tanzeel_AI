@@ -12,6 +12,7 @@ interface SidebarProps {
   avatarUrl: string;
   onOpenProfile: () => void;
   onOpenApiKeys: () => void;
+  onOpenAdmin: () => void;
   apiKeys: ApiKeyItem[];
 }
 
@@ -25,6 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   avatarUrl,
   onOpenProfile,
   onOpenApiKeys,
+  onOpenAdmin,
   apiKeys
 }) => {
   const activeKeyName = apiKeys.find(k => k.isActive)?.name || 'Default Env Key';
@@ -87,13 +89,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </span>
           </div>
 
-          <button
-            onClick={onOpenProfile}
-            className="text-xs text-emerald-500 hover:underline font-bold pt-1 flex items-center gap-1"
-          >
-            <i className="fas fa-circle-info"></i> View Full Bio & Qualifications
-          </button>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={onOpenProfile}
+              className="text-xs text-emerald-500 hover:underline font-bold flex items-center gap-1"
+            >
+              <i className="fas fa-circle-info"></i> Full Bio
+            </button>
+            <span className="text-slate-600">•</span>
+            <button
+              onClick={() => { onOpenAdmin(); onClose(); }}
+              className="text-xs text-amber-500 hover:underline font-bold flex items-center gap-1"
+            >
+              <i className="fas fa-user-gear"></i> Admin Panel
+            </button>
+          </div>
         </div>
+
 
         {/* Navigation / Modes */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -175,10 +187,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               Active: {activeKeyName}
             </p>
             <button
-              onClick={() => { onOpenApiKeys(); onClose(); }}
+              onClick={() => { onOpenAdmin(); onClose(); }}
               className="w-full bg-slate-700/60 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded-xl transition-all flex items-center justify-center gap-2"
             >
-              <i className="fas fa-sliders"></i> Manage API Keys
+              <i className="fas fa-user-shield text-amber-400"></i> Manage Keys in Admin Panel
             </button>
           </div>
 

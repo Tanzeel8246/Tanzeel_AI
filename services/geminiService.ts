@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { SYSTEM_INSTRUCTION } from "../constants";
+import { SYSTEM_INSTRUCTION, DEFAULT_GEMINI_KEYS, DEFAULT_GROQ_KEYS } from "../constants";
 import { ServiceMode, ApiKeyItem } from "../types";
 
 export const testApiKey = async (apiKey: string): Promise<'valid' | 'invalid' | 'rate_limited'> => {
@@ -14,7 +14,7 @@ export const testApiKey = async (apiKey: string): Promise<'valid' | 'invalid' | 
     });
     return response.text ? 'valid' : 'invalid';
   } catch (error: any) {
-    console.error("API Key Test Error:", error);
+    console.error("Gemini API Key Test Error:", error);
     const errString = String(error?.message || error || '').toLowerCase();
     if (errString.includes('429') || errString.includes('quota') || errString.includes('resource_exhausted')) {
       return 'rate_limited';
@@ -23,11 +23,72 @@ export const testApiKey = async (apiKey: string): Promise<'valid' | 'invalid' | 
   }
 };
 
+export const testGroqApiKey = async (apiKey: string): Promise<'valid' | 'invalid' | 'rate_limited'> => {
+  if (!apiKey || !apiKey.trim()) return 'invalid';
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey.trim()}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: 'Ping' }],
+        max_tokens: 5
+      })
+    });
+    if (res.ok) return 'valid';
+    if (res.status === 429) return 'rate_limited';
+    return 'invalid';
+  } catch (e) {
+    return 'invalid';
+  }
+};
+
+async function callGroqApi(
+  apiKey: string,
+  prompt: string,
+  systemText: string,
+  history: { role: string; parts: { text: string }[] }[]
+): Promise<string> {
+  const messages = [
+    { role: 'system', content: systemText },
+    ...history.map(h => ({
+      role: h.role === 'model' ? 'assistant' : 'user',
+      content: h.parts[0]?.text || ''
+    })),
+    { role: 'user', content: prompt }
+  ];
+
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey.trim()}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages,
+      temperature: 0.7
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Groq API Error (${res.status}): ${errText}`);
+  }
+
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || "کوئی جواب موصول نہیں ہوا۔";
+}
+
 export const getGeminiResponse = async (
   prompt: string, 
   mode: ServiceMode, 
   history: { role: string; parts: { text: string }[] }[],
-  apiKeysList: ApiKeyItem[] = []
+  apiKeysList: ApiKeyItem[] = [],
+  customSystemInstruction?: string
 ): Promise<{ 
   text: string; 
   imageUrl?: string; 
@@ -35,122 +96,124 @@ export const getGeminiResponse = async (
   usedKeyName?: string;
   keyStatusUpdate?: { keyId: string; status: 'valid' | 'invalid' | 'rate_limited' };
 }> => {
-  // Build prioritized candidate list of keys
+  // Build candidate key list
   const candidateKeys: ApiKeyItem[] = [];
 
-  // 1. Active Key from user list
+  // 1. User/Active Keys
   const activeUserKey = apiKeysList.find(k => k.isActive && k.key.trim().length > 0);
   if (activeUserKey) candidateKeys.push(activeUserKey);
 
-  // 2. Other User Keys
   apiKeysList.filter(k => !k.isActive && k.key.trim().length > 0).forEach(k => candidateKeys.push(k));
 
-  // 3. Fallback Env Keys
-  const envKeys = [
-    process.env.GEMINI_API_KEY,
-    process.env.API_KEY,
-    process.env.GEMINI_API_KEY_2,
-    process.env.GEMINI_API_KEY_3
-  ].filter(k => !!k && k.trim().length > 0 && k !== 'PLACEHOLDER_API_KEY');
-
-  envKeys.forEach((k, idx) => {
+  // 2. Built-in Preset Gemini Keys
+  DEFAULT_GEMINI_KEYS.forEach((k, idx) => {
     if (!candidateKeys.some(c => c.key === k)) {
       candidateKeys.push({
-        id: `env-${idx}`,
-        name: idx === 0 ? 'Primary ENV Key (.env)' : `Secondary ENV Key #${idx + 1}`,
-        key: k!,
-        isEnvKey: true,
+        id: `builtin-gemini-${idx}`,
+        name: `Tanzil Gemini Key #${idx + 1}`,
+        key: k,
+        provider: 'gemini',
+        isBuiltIn: true,
         isActive: candidateKeys.length === 0,
         status: 'untested'
       });
     }
   });
 
-  if (candidateKeys.length === 0) {
-    return {
-      text: "براہ کرم اے پی آئی کیز مینیجر (API Keys Manager) میں ایک فعال Gemini API Key شامل کریں یا .env.local فائل میں GEMINI_API_KEY سیٹ کریں۔"
-    };
-  }
+  // 3. Built-in Preset Groq Keys
+  DEFAULT_GROQ_KEYS.forEach((k, idx) => {
+    if (!candidateKeys.some(c => c.key === k)) {
+      candidateKeys.push({
+        id: `builtin-groq-${idx}`,
+        name: `Tanzil Groq Key #${idx + 1}`,
+        key: k,
+        provider: 'groq',
+        isBuiltIn: true,
+        isActive: candidateKeys.length === 0,
+        status: 'untested'
+      });
+    }
+  });
 
   let lastError: any = null;
 
-  // Attempt each key in sequence
-  for (const candidate of candidateKeys) {
-    const ai = new GoogleGenAI({ apiKey: candidate.key });
-    
-    let modelName = 'gemini-2.5-flash';
-    let systemText = SYSTEM_INSTRUCTION;
+  let baseSystemText = customSystemInstruction || SYSTEM_INSTRUCTION;
 
-    if (mode === ServiceMode.GRAPHIC_DESIGN) {
-      modelName = 'gemini-2.5-flash';
-      systemText += "\nUser is requesting a graphic design. Provide detailed Sharia-compliant artwork description and generate design ideas. Adhere to Sharia rules (strictly no living beings, no humans, no animals).";
-    } else if (mode === ServiceMode.WEB_DESIGN) {
-      modelName = 'gemini-2.5-flash';
-      systemText += "\nUser is requesting a web application design. Provide clean, functional, beautiful modern HTML and Tailwind CSS inside a ```html ``` code block for live preview.";
-    }
-
-    try {
-      const response = await ai.models.generateContent({
-        model: modelName,
-        contents: [
-          ...history,
-          { role: 'user', parts: [{ text: prompt }] }
-        ],
-        config: {
-          systemInstruction: systemText,
-          temperature: 0.7,
-        }
-      });
-
-      const text = response.text || "کوئی جواب موصول نہیں ہوا۔";
-      let imageUrl: string | undefined;
-      let webPreview: string | undefined;
-
-      if (mode === ServiceMode.GRAPHIC_DESIGN) {
-        for (const part of response.candidates?.[0]?.content?.parts || []) {
-          if (part.inlineData) {
-            imageUrl = `data:image/png;base64,${part.inlineData.data}`;
-          }
-        }
-      }
-
-      if (mode === ServiceMode.WEB_DESIGN || text.includes('```html')) {
-        const match = text.match(/```html([\s\S]*?)```/);
-        if (match) {
-          webPreview = match[1].trim();
-        }
-      }
-
-      return {
-        text,
-        imageUrl,
-        webPreview,
-        usedKeyName: candidate.name,
-        keyStatusUpdate: { keyId: candidate.id, status: 'valid' }
-      };
-
-    } catch (error: any) {
-      console.error(`Gemini Error with key (${candidate.name}):`, error);
-      lastError = error;
-
-      const errStr = String(error?.message || error || '').toLowerCase();
-      if (errStr.includes('429') || errStr.includes('quota') || errStr.includes('resource_exhausted')) {
-        // Try next key if rate limited
-        continue;
-      }
-    }
+  if (mode === ServiceMode.GRAPHIC_DESIGN) {
+    baseSystemText += "\nUser is requesting graphic design assistance. Clarify design requirements, provide complete Sharia-compliant artwork concepts, layout structures, CSS/SVG code, and optimized prompts for AI image generators (Midjourney/DALL-E/Ideogram). Clarify that you provide precise prompts, design specs, and vector code. Adhere strictly to Sharia rules (no living beings, no humans, no animals).";
+  } else if (mode === ServiceMode.WEB_DESIGN) {
+    baseSystemText += "\nUser is requesting a web application design. Provide clean, functional, beautiful modern HTML and Tailwind CSS inside a ```html ``` code block for live preview.";
   }
 
-  // If all keys failed
-  const errMessage = String(lastError?.message || lastError || '');
-  if (errMessage.includes('429') || errMessage.includes('quota') || errMessage.includes('resource_exhausted')) {
-    return {
-      text: "تمام اے پی آئی کیز (API Keys) کی روزانہ حد ختم یا شرح کا مسئلہ ہو چکا ہے۔ براہ کرم نئی API Key شامل کریں یا تھوڑی دیر بعد کوشش کریں۔"
-    };
+  // Sequentially try candidate keys
+  for (const candidate of candidateKeys) {
+    try {
+      if (candidate.provider === 'groq' || candidate.key.startsWith('gsk_')) {
+        const text = await callGroqApi(candidate.key, prompt, baseSystemText, history);
+        let webPreview: string | undefined;
+
+        if (mode === ServiceMode.WEB_DESIGN || text.includes('```html')) {
+          const match = text.match(/```html([\s\S]*?)```/);
+          if (match) webPreview = match[1].trim();
+        }
+
+        return {
+          text,
+          webPreview,
+          usedKeyName: `${candidate.name} (Groq Llama-3.3-70B)`,
+          keyStatusUpdate: { keyId: candidate.id, status: 'valid' }
+        };
+      } else {
+        // Default: Gemini
+        const ai = new GoogleGenAI({ apiKey: candidate.key });
+        const modelName = 'gemini-2.5-flash';
+
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents: [
+            ...history,
+            { role: 'user', parts: [{ text: prompt }] }
+          ],
+          config: {
+            systemInstruction: baseSystemText,
+            temperature: 0.7,
+          }
+        });
+
+        const text = response.text || "کوئی جواب موصول نہیں ہوا۔";
+        let imageUrl: string | undefined;
+        let webPreview: string | undefined;
+
+        if (mode === ServiceMode.GRAPHIC_DESIGN) {
+          for (const part of response.candidates?.[0]?.content?.parts || []) {
+            if (part.inlineData) {
+              imageUrl = `data:image/png;base64,${part.inlineData.data}`;
+            }
+          }
+        }
+
+        if (mode === ServiceMode.WEB_DESIGN || text.includes('```html')) {
+          const match = text.match(/```html([\s\S]*?)```/);
+          if (match) webPreview = match[1].trim();
+        }
+
+        return {
+          text,
+          imageUrl,
+          webPreview,
+          usedKeyName: `${candidate.name} (Gemini 2.5 Flash)`,
+          keyStatusUpdate: { keyId: candidate.id, status: 'valid' }
+        };
+      }
+    } catch (error: any) {
+      console.error(`Error with key (${candidate.name}):`, error);
+      lastError = error;
+      continue;
+    }
   }
 
   return { 
-    text: "معذرت، ایک تکنیکی خرابی پیش آگئی ہے۔ براہ کرم اپنی API Key کی تصدیق کریں یا دوبارہ کوشش کریں۔" 
+    text: "معذرت، درخواست پروسیس کرنے میں رکاوٹ آئی ہے۔ سسٹم ایڈمن سے رابطہ کریں۔" 
   };
 };
 

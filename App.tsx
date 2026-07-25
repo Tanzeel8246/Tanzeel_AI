@@ -4,10 +4,11 @@ import { Sidebar } from './src/components/Sidebar';
 import { ChatMessage } from './src/components/ChatMessage';
 import { ApiKeyModal } from './src/components/ApiKeyModal';
 import { ProfileModal } from './src/components/ProfileModal';
+import { AdminModal } from './src/components/AdminModal';
 import { WebPreviewModal } from './src/components/WebPreviewModal';
 import { getGeminiResponse } from './services/geminiService';
-import { ServiceMode, Message, UserStats, ApiKeyItem } from './types';
-import { TANZIL_AVATAR } from './constants';
+import { ServiceMode, Message, UserStats, ApiKeyItem, AdminSettings } from './types';
+import { TANZIL_AVATAR, SYSTEM_INSTRUCTION, DEFAULT_ADMIN_PIN } from './constants';
 
 const App: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
@@ -20,7 +21,24 @@ const App: React.FC = () => {
   // Modals and Drawers
   const [isApiKeysOpen, setIsApiKeysOpen] = useState<boolean>(false);
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
+  const [isAdminOpen, setIsAdminOpen] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+
+  // Admin Settings State
+  const [adminSettings, setAdminSettings] = useState<AdminSettings>(() => {
+    const saved = localStorage.getItem('tanzil_admin_settings');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) { console.error(e); }
+    }
+    return {
+      adminPin: DEFAULT_ADMIN_PIN,
+      systemPrompt: SYSTEM_INSTRUCTION,
+      avatarUrl: TANZIL_AVATAR,
+      allowPublicRequests: true,
+      graphicDailyLimit: 2,
+      webDailyLimit: 2
+    };
+  });
 
   // User Stats
   const [stats, setStats] = useState<UserStats>({
@@ -29,9 +47,9 @@ const App: React.FC = () => {
     lastReset: Date.now()
   });
 
-  // Avatar Image state (Tanzil-ur-Rehman Verified Official Portrait)
+  // Avatar Image state
   const [avatarUrl, setAvatarUrl] = useState<string>(() => {
-    return localStorage.getItem('tanzil_avatar') || TANZIL_AVATAR;
+    return adminSettings.avatarUrl || localStorage.getItem('tanzil_avatar') || TANZIL_AVATAR;
   });
 
   // API Keys state
@@ -79,6 +97,11 @@ const App: React.FC = () => {
 
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    localStorage.setItem('tanzil_admin_settings', JSON.stringify(adminSettings));
+    if (adminSettings.avatarUrl) setAvatarUrl(adminSettings.avatarUrl);
+  }, [adminSettings]);
+
   // Save Stats & Themes
   useEffect(() => {
     const savedStats = localStorage.getItem('tanzil_stats');
@@ -105,7 +128,7 @@ const App: React.FC = () => {
   }, [avatarUrl]);
 
   useEffect(() => {
-    const customOnly = apiKeys.filter(k => !k.isEnvKey);
+    const customOnly = apiKeys.filter(k => !k.isEnvKey && !k.isBuiltIn);
     localStorage.setItem('tanzil_api_keys', JSON.stringify(customOnly));
   }, [apiKeys]);
 
@@ -116,6 +139,10 @@ const App: React.FC = () => {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
+
+  const handleUpdateAdminSettings = (newSettings: Partial<AdminSettings>) => {
+    setAdminSettings(prev => ({ ...prev, ...newSettings }));
+  };
 
   // Download handlers
   const handleDownloadImage = (url: string) => {
@@ -155,11 +182,12 @@ const App: React.FC = () => {
   };
 
   // API Key handlers
-  const handleAddApiKey = (name: string, key: string) => {
+  const handleAddApiKey = (name: string, key: string, provider: 'gemini' | 'groq' = 'gemini') => {
     const newKeyItem: ApiKeyItem = {
       id: `custom-${Date.now()}`,
       name,
       key,
+      provider,
       isEnvKey: false,
       isActive: apiKeys.length === 0,
       status: 'untested'
@@ -189,12 +217,12 @@ const App: React.FC = () => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    if (mode === ServiceMode.GRAPHIC_DESIGN && stats.graphicRequests >= 2) {
-      alert("روزانہ کی حد پوری ہو چکی ہے (2/2) - Graphic Design limit reached.");
+    if (mode === ServiceMode.GRAPHIC_DESIGN && stats.graphicRequests >= adminSettings.graphicDailyLimit) {
+      alert(`روزانہ کی حد پوری ہو چکی ہے (${adminSettings.graphicDailyLimit}/${adminSettings.graphicDailyLimit}) - Graphic Design limit reached.`);
       return;
     }
-    if (mode === ServiceMode.WEB_DESIGN && stats.webRequests >= 2) {
-      alert("روزانہ کی حد پوری ہو چکی ہے (2/2) - Web Design limit reached.");
+    if (mode === ServiceMode.WEB_DESIGN && stats.webRequests >= adminSettings.webDailyLimit) {
+      alert(`روزانہ کی حد پوری ہو چکی ہے (${adminSettings.webDailyLimit}/${adminSettings.webDailyLimit}) - Web Design limit reached.`);
       return;
     }
 
@@ -216,7 +244,7 @@ const App: React.FC = () => {
       parts: [{ text: m.content }]
     }));
 
-    const response = await getGeminiResponse(currentInput, mode, history, apiKeys);
+    const response = await getGeminiResponse(currentInput, mode, history, apiKeys, adminSettings.systemPrompt);
 
     if (response.keyStatusUpdate) {
       handleUpdateKeyStatus(response.keyStatusUpdate.keyId, response.keyStatusUpdate.status);
@@ -241,7 +269,7 @@ const App: React.FC = () => {
     setMode(ServiceMode.CHAT);
   };
 
-  const activeKeyCount = apiKeys.filter(k => k.isActive || k.key.trim().length > 0).length;
+  const activeKeyCount = apiKeys.filter(k => k.isActive || k.key.trim().length > 0).length + 6; // 5 built-in Gemini + 1 built-in Groq
 
   return (
     <div className={`flex h-screen overflow-hidden ${isDarkMode ? 'dark bg-[#0f172a] text-slate-100' : 'bg-[#fafafa] text-slate-900'}`}>
@@ -256,6 +284,7 @@ const App: React.FC = () => {
         avatarUrl={avatarUrl}
         onOpenProfile={() => setIsProfileOpen(true)}
         onOpenApiKeys={() => setIsApiKeysOpen(true)}
+        onOpenAdmin={() => setIsAdminOpen(true)}
         apiKeys={apiKeys}
       />
 
@@ -267,6 +296,7 @@ const App: React.FC = () => {
           onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
           onOpenApiKeys={() => setIsApiKeysOpen(true)}
           onOpenProfile={() => setIsProfileOpen(true)}
+          onOpenAdmin={() => setIsAdminOpen(true)}
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           activeKeyCount={activeKeyCount}
           avatarUrl={avatarUrl}
@@ -325,13 +355,13 @@ const App: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => { setInput("براہ کرم ایک شریعت کے مطابق ٹیکنالوجی کمپنی کا لوگو ڈیزائن ڈسکرائب کریں۔"); setMode(ServiceMode.GRAPHIC_DESIGN); }}
+                    onClick={() => { setInput("براہ کرم ایک شریعت کے مطابق ٹیکنالوجی کمپنی کا لوگو ڈیزائن اور پرامپٹ فراہم کریں۔"); setMode(ServiceMode.GRAPHIC_DESIGN); }}
                     className={`p-3 rounded-2xl border text-xs text-left transition-all hover:scale-101 ${
                       isDarkMode ? 'bg-slate-800/60 border-slate-700/80 hover:border-purple-500 text-slate-200' : 'bg-white border-gray-200 hover:border-purple-500 text-slate-800 shadow-xs'
                     }`}
                   >
-                    <span className="block font-bold text-purple-400">🎨 Sharia Graphic Design</span>
-                    <span className="text-[11px] opacity-70">Strictly no living beings or immoral themes</span>
+                    <span className="block font-bold text-purple-400">🎨 Sharia Graphic Design Specs & Prompt</span>
+                    <span className="text-[11px] opacity-70">Design concept, color scheme & AI prompt (Strictly no living beings)</span>
                   </button>
                 </div>
               </div>
@@ -396,7 +426,7 @@ const App: React.FC = () => {
                     : (isDarkMode ? 'bg-slate-800 border-slate-700 text-purple-400 hover:text-purple-300' : 'bg-gray-100 border-gray-200 text-purple-600 hover:text-purple-700')
                 }`}
               >
-                <i className="fas fa-palette"></i> GRAPHIC ({2 - stats.graphicRequests}/2)
+                <i className="fas fa-palette"></i> GRAPHIC PROMPT ({adminSettings.graphicDailyLimit - stats.graphicRequests}/{adminSettings.graphicDailyLimit})
               </button>
 
               <button 
@@ -407,7 +437,7 @@ const App: React.FC = () => {
                     : (isDarkMode ? 'bg-slate-800 border-slate-700 text-blue-400 hover:text-blue-300' : 'bg-gray-100 border-gray-200 text-blue-600 hover:text-blue-700')
                 }`}
               >
-                <i className="fas fa-code"></i> WEB ({2 - stats.webRequests}/2)
+                <i className="fas fa-code"></i> WEB ({adminSettings.webDailyLimit - stats.webRequests}/{adminSettings.webDailyLimit})
               </button>
             </div>
 
@@ -482,7 +512,24 @@ const App: React.FC = () => {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         avatarUrl={avatarUrl}
-        onUpdateAvatar={(url) => setAvatarUrl(url)}
+        onUpdateAvatar={(url) => {
+          setAvatarUrl(url);
+          setAdminSettings(prev => ({ ...prev, avatarUrl: url }));
+        }}
+        isDarkMode={isDarkMode}
+      />
+
+      {/* Admin Panel Modal */}
+      <AdminModal
+        isOpen={isAdminOpen}
+        onClose={() => setIsAdminOpen(false)}
+        adminSettings={adminSettings}
+        onUpdateAdminSettings={handleUpdateAdminSettings}
+        apiKeys={apiKeys}
+        onAddKey={handleAddApiKey}
+        onRemoveKey={handleRemoveApiKey}
+        onSelectActiveKey={handleSelectActiveKey}
+        onUpdateKeyStatus={handleUpdateKeyStatus}
         isDarkMode={isDarkMode}
       />
 
@@ -498,3 +545,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+

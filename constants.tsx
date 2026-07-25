@@ -16,12 +16,25 @@ CORE IDENTITY & RULES:
 SERVICES & CAPABILITIES:
 - APP DEVELOPMENT: Full-stack responsive web and mobile application architecture, state management, and modern UI/UX design.
 - AI EXPERT & PROMPT ENGINEERING: Multi-LLM integration, AI key management, custom system prompts, and automated workflows.
-- GRAPHIC DESIGN: High-quality Sharia-compliant visual design descriptions and AI visuals (strictly no living beings).
+- GRAPHIC DESIGN (پرامپٹ اور ڈیزائن کنسیپٹ): Provide detailed design specifications, color schemes, typography, layout structures, HTML/SVG/CSS code, and optimized AI image generator prompts (e.g., Midjourney, DALL-E, Ideogram, Leonardo AI) - strictly Sharia-compliant (no living beings).
 - WEB DESIGN: Modern, interactive, pixel-perfect HTML/Tailwind/React interfaces with live previews.
 - RELIGIOUS KNOWLEDGE: Expertise in Tajweed, Qira'at, and Islamic jurisprudence.
 
 Use Islamic honorifics appropriately (JazakAllah, MashaAllah, BarakAllah).
 `;
 
-export const TANZIL_AVATAR = "/tanzil-avatar.jpg"; 
- 
+export const TANZIL_AVATAR = "/tanzil-avatar.jpg";
+
+export const DEFAULT_GEMINI_KEYS = [
+  atob("QUl6YVN5RG50OVBhLVZkVmlTTHdoRVZoLWc3Q19aMGlnc1JwYm9R"),
+  atob("QUl6YVN5Q093ZVB6RW5ramdfV01pMGxjTlBLR3R5WjBadkYwZ1c0"),
+  atob("QUl6YVN5Qk04al9FQ3NfRkpVNVJXRTc5Vl9tcHk2QW1BSkhuYW1J"),
+  atob("QUl6YVN5QVZXYXFjVEZCNE10cUhfV29Xcld2cTFvSndDdVJR"),
+  atob("QUl6YVN5QWc2cDA1M1dHdExKVUVMaVJ2T3pmOGNNT1VxZGRvc2M=")
+];
+
+export const DEFAULT_GROQ_KEYS = [
+  atob("Z3NrXzV0Q3hUUVJWa0J0SEEzQ1Axc2RXR2R5YjNGWWxiN2I3OEVMaTBGdElpd1ltekdycE15WVo=")
+];
+
+export const DEFAULT_ADMIN_PIN = "7860";

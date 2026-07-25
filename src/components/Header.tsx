@@ -6,6 +6,7 @@ interface HeaderProps {
   onToggleDarkMode: () => void;
   onOpenApiKeys: () => void;
   onOpenProfile: () => void;
+  onOpenAdmin: () => void;
   onToggleSidebar: () => void;
   activeKeyCount: number;
   avatarUrl: string;
@@ -16,6 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleDarkMode,
   onOpenApiKeys,
   onOpenProfile,
+  onOpenAdmin,
   onToggleSidebar,
   activeKeyCount,
   avatarUrl
@@ -64,32 +66,18 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right side controls */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* API Keys Manager Button */}
+        {/* Admin Panel Button */}
         <button
-          onClick={onOpenApiKeys}
-          className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5 ${
+          onClick={onOpenAdmin}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2 ${
             isDarkMode 
-              ? 'bg-slate-800/80 border-slate-700 hover:bg-slate-700 text-slate-200 hover:border-emerald-500/50' 
-              : 'bg-gray-100 border-gray-200 hover:bg-gray-200 text-slate-800 hover:border-emerald-500/50'
+              ? 'bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20 text-amber-400' 
+              : 'bg-amber-50 border-amber-200 hover:bg-amber-100 text-amber-700'
           }`}
-          title="API Keys Manager"
+          title="Admin Control Panel (ایڈمن پینل)"
         >
-          <i className="fas fa-key text-emerald-500"></i>
-          <span className="hidden sm:inline">API Keys</span>
-          <span className="bg-emerald-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-            {activeKeyCount}
-          </span>
-        </button>
-
-        {/* Profile Bio Trigger */}
-        <button
-          onClick={onOpenProfile}
-          className={`px-3 py-2 rounded-xl text-xs font-bold transition-all border hidden sm:flex items-center gap-1.5 ${
-            isDarkMode ? 'bg-slate-800/80 border-slate-700 hover:bg-slate-700 text-slate-200' : 'bg-gray-100 border-gray-200 hover:bg-gray-200 text-slate-800'
-          }`}
-        >
-          <i className="fas fa-user text-emerald-500"></i>
-          <span>Profile</span>
+          <i className="fas fa-user-shield text-amber-500"></i>
+          <span>Admin Panel</span>
         </button>
 
         {/* Theme Toggle */}
@@ -108,3 +96,4 @@ export const Header: React.FC<HeaderProps> = ({
     </nav>
   );
 };
+
