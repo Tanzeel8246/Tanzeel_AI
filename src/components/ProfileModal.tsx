@@ -86,23 +86,10 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 <p className="text-xs text-emerald-500 font-semibold tracking-wide mt-0.5">Farooka, Sargodha (فروکہ، سرگودھا)</p>
               </div>
 
-              {/* Photo Upload Option */}
-              <div>
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  accept="image/*" 
-                  className="hidden" 
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition-all flex items-center gap-1.5 mx-auto sm:mx-0"
-                >
-                  <i className="fas fa-camera"></i>
-                  <span>تصویر تبدیل کریں (Upload Exact Photo)</span>
-                </button>
+              {/* Verified Badge Badge (Photo upload is strictly restricted to Admin Panel) */}
+              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl w-fit mx-auto sm:mx-0">
+                <i className="fas fa-user-shield text-amber-400"></i>
+                <span>سرکاری اور تصدیق شدہ تصویر (Official Avatar)</span>
               </div>
 
               {/* Skills Badges */}

@@ -10,6 +10,8 @@ interface HeaderProps {
   onToggleSidebar: () => void;
   activeKeyCount: number;
   avatarUrl: string;
+  onSaveMemory?: () => void;
+  memorySavedCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -20,7 +22,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAdmin,
   onToggleSidebar,
   activeKeyCount,
-  avatarUrl
+  avatarUrl,
+  onSaveMemory,
+  memorySavedCount = 0
 }) => {
   return (
     <nav className={`px-4 sm:px-6 py-3.5 sticky top-0 z-40 flex justify-between items-center border-b transition-colors duration-300 backdrop-blur-md ${
@@ -66,6 +70,22 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Right side controls */}
       <div className="flex items-center gap-2 sm:gap-3">
+        {/* Quick Memory Save Button */}
+        {onSaveMemory && (
+          <button
+            onClick={onSaveMemory}
+            className={`hidden sm:flex px-3 py-2 rounded-xl text-xs font-bold transition-all border items-center gap-1.5 ${
+              isDarkMode
+                ? 'bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 text-emerald-400'
+                : 'bg-emerald-50 border-emerald-200 hover:bg-emerald-100 text-emerald-800'
+            }`}
+            title="Save Chat Memory (میموری سیو کریں)"
+          >
+            <i className="fas fa-brain text-emerald-500"></i>
+            <span>میموری سیو ({memorySavedCount})</span>
+          </button>
+        )}
+
         {/* Admin Panel Button */}
         <button
           onClick={onOpenAdmin}

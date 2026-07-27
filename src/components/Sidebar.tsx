@@ -14,6 +14,11 @@ interface SidebarProps {
   onOpenApiKeys: () => void;
   onOpenAdmin: () => void;
   apiKeys: ApiKeyItem[];
+  memorySavedCount?: number;
+  autoSaveMemory?: boolean;
+  onToggleAutoSaveMemory?: () => void;
+  onSaveMemory?: () => void;
+  onClearMemory?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -27,7 +32,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenProfile,
   onOpenApiKeys,
   onOpenAdmin,
-  apiKeys
+  apiKeys,
+  memorySavedCount = 0,
+  autoSaveMemory = true,
+  onToggleAutoSaveMemory,
+  onSaveMemory,
+  onClearMemory
 }) => {
   const activeKeyName = apiKeys.find(k => k.isActive)?.name || 'Default Env Key';
 
@@ -168,6 +178,63 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   {2 - stats.webRequests}/2 Left
                 </span>
               </button>
+            </div>
+          </div>
+
+          {/* Memory Save & Chat Persistence Widget */}
+          <div className={`p-4 rounded-2xl border space-y-3 ${
+            isDarkMode ? 'bg-slate-800/60 border-slate-700/80' : 'bg-slate-50 border-gray-200'
+          }`}>
+            <div className="flex justify-between items-center">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 flex items-center gap-1.5">
+                <i className="fas fa-brain"></i> چاٹ میموری (Chat Memory)
+              </span>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                {memorySavedCount} Messages
+              </span>
+            </div>
+
+            <p className="text-[11px] opacity-75 leading-tight">
+              آپ کی گفتگو اور ہدایات میموری میں محفوظ رہتی ہیں۔
+            </p>
+
+            <div className="flex items-center justify-between text-xs font-bold pt-1">
+              <span className="flex items-center gap-1.5 text-slate-300">
+                <i className={`fas fa-floppy-disk ${autoSaveMemory ? 'text-emerald-400' : 'text-slate-500'}`}></i>
+                خودکار میموری سیو
+              </span>
+              <button
+                type="button"
+                onClick={onToggleAutoSaveMemory}
+                className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 ease-in-out ${
+                  autoSaveMemory ? 'bg-emerald-500' : 'bg-slate-600'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out ${
+                  autoSaveMemory ? 'translate-x-4' : 'translate-x-0'
+                }`} />
+              </button>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={onSaveMemory}
+                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 px-2 rounded-xl transition-all shadow flex items-center justify-center gap-1.5"
+              >
+                <i className="fas fa-download"></i>
+                <span>میموری سیو کریں</span>
+              </button>
+              {onClearMemory && (
+                <button
+                  type="button"
+                  onClick={onClearMemory}
+                  title="Clear Saved Memory"
+                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs px-2.5 py-1.5 rounded-xl transition-all"
+                >
+                  <i className="fas fa-trash-can"></i>
+                </button>
+              )}
             </div>
           </div>
 

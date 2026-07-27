@@ -52,6 +52,57 @@ const App: React.FC = () => {
     return adminSettings.avatarUrl || TANZIL_AVATAR;
   });
 
+  // Chat Memory Save State
+  const [autoSaveMemory, setAutoSaveMemory] = useState<boolean>(() => {
+    const saved = localStorage.getItem('tanzil_auto_save_memory');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // Load saved chat memory on mount
+  useEffect(() => {
+    const savedMemory = localStorage.getItem('tanzil_saved_chat_memory');
+    if (savedMemory) {
+      try {
+        const parsed = JSON.parse(savedMemory);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+        }
+      } catch (e) {
+        console.error("Failed loading chat memory", e);
+      }
+    }
+  }, []);
+
+  // Save memory automatically if enabled
+  useEffect(() => {
+    if (autoSaveMemory && messages.length > 0) {
+      localStorage.setItem('tanzil_saved_chat_memory', JSON.stringify(messages));
+    }
+    localStorage.setItem('tanzil_auto_save_memory', JSON.stringify(autoSaveMemory));
+  }, [messages, autoSaveMemory]);
+
+  const handleSaveMemory = () => {
+    localStorage.setItem('tanzil_saved_chat_memory', JSON.stringify(messages));
+    const blob = new Blob([JSON.stringify(messages, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tanzil_chat_memory_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleClearMemory = () => {
+    if (window.confirm("کیا آپ واقعی محفوظ شدہ چاٹ میموری کو ختم کرنا چاہتے ہیں؟ (Are you sure you want to clear chat memory?)")) {
+      localStorage.removeItem('tanzil_saved_chat_memory');
+      setMessages([]);
+    }
+  };
+
+  const handleToggleAutoSaveMemory = () => {
+    setAutoSaveMemory(prev => !prev);
+  };
+
   // API Keys state
   const [apiKeys, setApiKeys] = useState<ApiKeyItem[]>(() => {
     const savedKeys = localStorage.getItem('tanzil_api_keys');
@@ -340,6 +391,11 @@ const App: React.FC = () => {
         onOpenApiKeys={() => setIsApiKeysOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
         apiKeys={apiKeys}
+        memorySavedCount={messages.length}
+        autoSaveMemory={autoSaveMemory}
+        onToggleAutoSaveMemory={handleToggleAutoSaveMemory}
+        onSaveMemory={handleSaveMemory}
+        onClearMemory={handleClearMemory}
       />
 
       {/* Main Container */}
@@ -354,6 +410,8 @@ const App: React.FC = () => {
           onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           activeKeyCount={activeKeyCount}
           avatarUrl={avatarUrl}
+          onSaveMemory={handleSaveMemory}
+          memorySavedCount={messages.length}
         />
 
         {/* Chat Message Scroll Stream */}
@@ -566,10 +624,6 @@ const App: React.FC = () => {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         avatarUrl={avatarUrl}
-        onUpdateAvatar={(url) => {
-          setAvatarUrl(url);
-          setAdminSettings(prev => ({ ...prev, avatarUrl: url }));
-        }}
         isDarkMode={isDarkMode}
       />
 
